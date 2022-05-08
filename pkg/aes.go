@@ -2,13 +2,72 @@ package aes
 
 import (
 	"crypto/aes"
+	"crypto/cipher"
 	"encoding/hex"
 	"errors"
+	"fmt"
 )
 
 const BlockSize int = 16
 
 type Block = []byte
+
+func EncryptCBC(key, iv, msg []byte) (string, error) {
+	c, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	blocks := padPKCS7(splitIntoBlocks(msg), msg)
+
+	var encrypted []byte
+	if len(iv) != BlockSize {
+		return "", fmt.Errorf("initialization vector must be %d bytes long", BlockSize)
+	}
+	cbc := cipher.NewCBCEncrypter(c, iv)
+	for _, block := range blocks {
+		encryptedBlock := make(Block, BlockSize)
+		cbc.CryptBlocks(encryptedBlock, block)
+		encrypted = append(encrypted, encryptedBlock...)
+	}
+
+	return hex.EncodeToString(encrypted), nil
+}
+
+func DecryptCBC(key, iv, ciphertext []byte) (string, error) {
+	decoded := make([]byte, len(ciphertext))
+	bytes, err := hex.Decode(decoded, ciphertext)
+	decoded = decoded[:bytes]
+	if err != nil {
+		if _, ok := err.(hex.InvalidByteError); ok {
+			return "", errors.New("cipher contains non-hex value")
+		}
+		return "", err
+	}
+
+	c, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	if len(iv) != BlockSize {
+		return "", fmt.Errorf("initialization vector must be %d bytes long", BlockSize)
+	}
+	var decrypted []byte
+	cbc := cipher.NewCBCDecrypter(c, iv)
+	blocks := splitIntoBlocks(decoded)
+	for _, block := range blocks {
+		decryptedBlock := make(Block, BlockSize)
+		cbc.CryptBlocks(decryptedBlock, block)
+		decrypted = append(decrypted, decryptedBlock...)
+	}
+
+	padding := int(decrypted[len(decrypted)-1])
+	s := string(decrypted[:len(decrypted)-padding])
+
+	return s, nil
+
+}
 
 func splitIntoBlocks(s []byte) []Block {
 	size := len(s) / BlockSize
@@ -41,54 +100,4 @@ func padPKCS7(b []Block, s []byte) []Block {
 	}
 
 	return b
-}
-
-func Encrypt(key []byte, msg []byte) (string, error) {
-	c, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	var encrypted []byte
-
-	blocks := padPKCS7(splitIntoBlocks(msg), msg)
-
-	for _, block := range blocks {
-		encryptedBlock := make(Block, BlockSize)
-		c.Encrypt(encryptedBlock, block)
-		encrypted = append(encrypted, encryptedBlock...)
-	}
-
-	return hex.EncodeToString(encrypted), nil
-}
-
-func Decrypt(key []byte, cipher []byte) (string, error) {
-	decoded := make([]byte, len(cipher))
-	bytes, err := hex.Decode(decoded, cipher)
-	decoded = decoded[:bytes]
-	if err != nil {
-		if _, ok := err.(hex.InvalidByteError); ok {
-			return "", errors.New("cipher contains non-hex value")
-		}
-		return "", err
-	}
-
-	c, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	var decrypted []byte
-
-	blocks := splitIntoBlocks(decoded)
-	for _, block := range blocks {
-		decryptedBlock := make(Block, BlockSize)
-		c.Decrypt(decryptedBlock, block)
-		decrypted = append(decrypted, decryptedBlock...)
-	}
-
-	padding := int(decrypted[len(decrypted)-1])
-	s := string(decrypted[:len(decrypted)-padding])
-
-	return s, nil
 }

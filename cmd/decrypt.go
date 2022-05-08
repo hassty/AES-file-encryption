@@ -41,7 +41,7 @@ var decryptCmd = &cobra.Command{
 		}
 		cipher = bytes.TrimSpace(cipher)
 
-		decrypted, err := aes.Decrypt(key, cipher)
+		decrypted, err := aes.DecryptCBC(key, []byte(Iv), cipher)
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -2,38 +2,43 @@ package aes
 
 import "testing"
 
-type encryptionTest struct {
+type cbcTest struct {
 	key       string
+	iv        string
 	message   string
 	encrypted string
 }
 
-var encryptionTests = []encryptionTest{
+var cbcTests = []cbcTest{
 	{
 		"cafebabedeadbeef",
+		"deadfa11feedc0de",
 		"",
-		"921047074bbe2ae05437fd555d6aea0c",
+		"32197df52dc8def99c4e1d7519e42fb4",
 	},
 	{
 		"cafebabedeadbeef",
+		"deadfa11feedc0de",
 		"two words",
-		"5e6e1774e67ce01238e9198b71b96e6e",
+		"1cd722924b0931d6473421ece9ec8ccb",
 	},
 	{
 		"cafebabedeadbeef",
+		"deadfa11feedc0de",
 		"one block length",
-		"ab424cc5629a0663c13d5f1e4a2a4957921047074bbe2ae05437fd555d6aea0c",
+		"fda1f0c669f7fe1fbf6c94c4aca48cedc68a491a8d177850f3af828a55afa5d6",
 	},
 	{
 		"cafebabedeadbeef",
+		"deadfa11feedc0de",
 		"this is a very long text to test multiple blocks",
-		"88cbcb13c70924d443736634fd814cb667c6fe4d22e58f7cd584c4290035695c481cfd71925415a64369457a2d13ed2a921047074bbe2ae05437fd555d6aea0c",
+		"01d3546248c9eea31e3289f082da6b34831befe37a394ecc46e1d047eaaf38aa68f71b348b9f4b65e629949ad462eed29734c3d050a6b687d102d2509db02bef",
 	},
 }
 
-func TestEncrypt(t *testing.T) {
-	for _, test := range encryptionTests {
-		got := Encrypt([]byte(test.key), []byte(test.message))
+func TestEncryptCBC(t *testing.T) {
+	for _, test := range cbcTests {
+		got, _ := EncryptCBC([]byte(test.key), []byte(test.iv), []byte(test.message))
 		if got != test.encrypted {
 			t.Fatalf(`failed to encrypt message %q
             expected %q
@@ -43,9 +48,9 @@ func TestEncrypt(t *testing.T) {
 	}
 }
 
-func TestDecrypt(t *testing.T) {
-	for _, test := range encryptionTests {
-		got := Decrypt([]byte(test.key), []byte(test.encrypted))
+func TestDecryptCBC(t *testing.T) {
+	for _, test := range cbcTests {
+		got, _ := DecryptCBC([]byte(test.key), []byte(test.iv), []byte(test.encrypted))
 		if got != test.message {
 			t.Fatalf(`failed to decrypt cipher %q
             expected %q

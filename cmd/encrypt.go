@@ -41,7 +41,7 @@ var encryptCmd = &cobra.Command{
 		}
 		msg = bytes.TrimSpace(msg)
 
-		encrypted, err := aes.Encrypt(key, msg)
+		encrypted, err := aes.EncryptCBC(key, []byte(Iv), msg)
 		if err != nil {
 			log.Fatal(err)
 		}

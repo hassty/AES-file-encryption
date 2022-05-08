@@ -11,6 +11,7 @@ import (
 var (
 	Keyfile  string
 	Textfile string
+	Iv       string
 	rootCmd  = &cobra.Command{
 		Use:   "aes",
 		Short: "encrypt or decrypt files using aes",
@@ -31,5 +32,7 @@ func init() {
 	rootCmd.AddCommand(decryptCmd)
 
 	encryptCmd.Flags().StringVarP(&Keyfile, "keyfile", "k", "aes.key", "path to keyfile")
+	encryptCmd.Flags().StringVar(&Iv, "iv", "", "initialization vector")
 	decryptCmd.Flags().StringVarP(&Keyfile, "keyfile", "k", "aes.key", "path to keyfile")
+	decryptCmd.Flags().StringVar(&Iv, "iv", "", "initialization vector")
 }
