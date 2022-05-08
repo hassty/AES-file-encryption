@@ -1,4 +1,4 @@
-package main
+package aes
 
 import (
 	"crypto/aes"
@@ -9,7 +9,7 @@ const BlockSize int = 16
 
 type Block = []byte
 
-func splitIntoBlocks(s string) []Block {
+func splitIntoBlocks(s []byte) []Block {
 	size := len(s) / BlockSize
 	blocks := make([]Block, size)
 
@@ -20,7 +20,7 @@ func splitIntoBlocks(s string) []Block {
 	return blocks
 }
 
-func padPKCS7(b []Block, s string) []Block {
+func padPKCS7(b []Block, s []byte) []Block {
 	remainingSize := len(s) % BlockSize
 	if remainingSize != 0 {
 		lastBlock := Block(s[len(s)-remainingSize:])
@@ -42,9 +42,9 @@ func padPKCS7(b []Block, s string) []Block {
 	return b
 }
 
-func Encrypt(key []byte, msg string) string {
+func Encrypt(key []byte, msg []byte) string {
 	c, err := aes.NewCipher(key)
-	CheckError(err)
+	checkError(err)
 
 	var encrypted []byte
 
@@ -59,16 +59,18 @@ func Encrypt(key []byte, msg string) string {
 	return hex.EncodeToString(encrypted)
 }
 
-func Decrypt(key []byte, cipher string) string {
-	ciphertext, err := hex.DecodeString(cipher)
-	CheckError(err)
+func Decrypt(key []byte, cipher []byte) string {
+	decoded := make([]byte, len(cipher))
+	bytes, err := hex.Decode(decoded, cipher)
+	decoded = decoded[:bytes]
+	checkError(err)
 
 	c, err := aes.NewCipher(key)
-	CheckError(err)
+	checkError(err)
 
 	var decrypted []byte
 
-	blocks := splitIntoBlocks(string(ciphertext))
+	blocks := splitIntoBlocks(decoded)
 	for _, block := range blocks {
 		decryptedBlock := make(Block, BlockSize)
 		c.Decrypt(decryptedBlock, block)
@@ -81,7 +83,7 @@ func Decrypt(key []byte, cipher string) string {
 	return s
 }
 
-func CheckError(err error) {
+func checkError(err error) {
 	if err != nil {
 		panic(err)
 	}

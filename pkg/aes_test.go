@@ -1,4 +1,4 @@
-package main
+package aes
 
 import "testing"
 
@@ -33,7 +33,7 @@ var encryptionTests = []encryptionTest{
 
 func TestEncrypt(t *testing.T) {
 	for _, test := range encryptionTests {
-		got := Encrypt([]byte(test.key), test.message)
+		got := Encrypt([]byte(test.key), []byte(test.message))
 		if got != test.encrypted {
 			t.Fatalf(`failed to encrypt message %q
             expected %q
@@ -45,7 +45,7 @@ func TestEncrypt(t *testing.T) {
 
 func TestDecrypt(t *testing.T) {
 	for _, test := range encryptionTests {
-		got := Decrypt([]byte(test.key), test.encrypted)
+		got := Decrypt([]byte(test.key), []byte(test.encrypted))
 		if got != test.message {
 			t.Fatalf(`failed to decrypt cipher %q
             expected %q
