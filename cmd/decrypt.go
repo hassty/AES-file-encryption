@@ -27,7 +27,11 @@ var decryptCmd = &cobra.Command{
 
 		key, err := os.ReadFile(Keyfile)
 		if err != nil {
-			log.Fatal(err)
+			if pathErr, ok := err.(*os.PathError); ok {
+				log.Fatalf("invalid path to keyfile: %v\n", pathErr.Path)
+			} else {
+				log.Fatal(err)
+			}
 		}
 		key = bytes.TrimSpace(key)
 
@@ -37,7 +41,10 @@ var decryptCmd = &cobra.Command{
 		}
 		cipher = bytes.TrimSpace(cipher)
 
-		decrypted := aes.Decrypt(key, cipher)
+		decrypted, err := aes.Decrypt(key, cipher)
+		if err != nil {
+			log.Fatal(err)
+		}
 		fmt.Println(decrypted)
 	},
 }

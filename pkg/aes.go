@@ -3,6 +3,7 @@ package aes
 import (
 	"crypto/aes"
 	"encoding/hex"
+	"errors"
 )
 
 const BlockSize int = 16
@@ -42,9 +43,11 @@ func padPKCS7(b []Block, s []byte) []Block {
 	return b
 }
 
-func Encrypt(key []byte, msg []byte) string {
+func Encrypt(key []byte, msg []byte) (string, error) {
 	c, err := aes.NewCipher(key)
-	checkError(err)
+	if err != nil {
+		return "", err
+	}
 
 	var encrypted []byte
 
@@ -56,17 +59,24 @@ func Encrypt(key []byte, msg []byte) string {
 		encrypted = append(encrypted, encryptedBlock...)
 	}
 
-	return hex.EncodeToString(encrypted)
+	return hex.EncodeToString(encrypted), nil
 }
 
-func Decrypt(key []byte, cipher []byte) string {
+func Decrypt(key []byte, cipher []byte) (string, error) {
 	decoded := make([]byte, len(cipher))
 	bytes, err := hex.Decode(decoded, cipher)
 	decoded = decoded[:bytes]
-	checkError(err)
+	if err != nil {
+		if _, ok := err.(hex.InvalidByteError); ok {
+			return "", errors.New("cipher contains non-hex value")
+		}
+		return "", err
+	}
 
 	c, err := aes.NewCipher(key)
-	checkError(err)
+	if err != nil {
+		return "", err
+	}
 
 	var decrypted []byte
 
@@ -80,11 +90,5 @@ func Decrypt(key []byte, cipher []byte) string {
 	padding := int(decrypted[len(decrypted)-1])
 	s := string(decrypted[:len(decrypted)-padding])
 
-	return s
-}
-
-func checkError(err error) {
-	if err != nil {
-		panic(err)
-	}
+	return s, nil
 }

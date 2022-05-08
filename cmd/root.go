@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,9 +25,11 @@ func Execute() {
 }
 
 func init() {
+	log.SetFlags(0)
+
 	rootCmd.AddCommand(encryptCmd)
 	rootCmd.AddCommand(decryptCmd)
 
-	encryptCmd.Flags().StringVarP(&Keyfile, "keyfile", "k", "key.aes", "path to keyfile")
-	decryptCmd.Flags().StringVarP(&Keyfile, "keyfile", "k", "key.aes", "path to keyfile")
+	encryptCmd.Flags().StringVarP(&Keyfile, "keyfile", "k", "aes.key", "path to keyfile")
+	decryptCmd.Flags().StringVarP(&Keyfile, "keyfile", "k", "aes.key", "path to keyfile")
 }
